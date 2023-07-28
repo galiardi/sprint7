@@ -27,23 +27,23 @@ DELIMITER **
     )
     
     BEGIN
-    
+    -- lanza error si emisor es igual a receptor
+    -- si son iguales, el usuario sumara dinero a su cuenta en vez de quedar igual
     IF (emisor = receptor) THEN
       SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El emisor no puede ser igual al receptor';
     END IF;
-    
+
     SET @emisor_state = (SELECT state FROM usuarios WHERE id_usuario= emisor);
     SET @receptor_state = (SELECT state FROM usuarios WHERE id_usuario= receptor);
 
-    -- chequea si usuario no existe, No funciona.
-    /* IF (@emisor_state = null OR @receptor_state = null) THEN
+    -- lanza error si algun usuario no existe. Ademas es necesario descartar null para hacer la siguiente comprobacion
+    IF (@emisor_state IS NULL OR @receptor_state IS NULL) THEN
       SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Al menos uno de los usuarios no existe';
-    END IF; */
+    END IF;
 
-    -- chequea si usuario no existe o no existe por borrado logico
-    -- PROBLEMA: no funciona esta comprobacion cuando paso un emisor que no existe, en todos los demas casos si funciona. why?????????????????????????????????????????
-    IF (@emisor_state != 1 OR @receptor_state != 1) THEN
-      SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Al menos uno de los usuarios no existe';
+    -- lanza error si algun usuario tiene borrado logico
+    IF (@emisor_state = 0 OR @receptor_state = 0) THEN
+      SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Al menos uno de los usuarios ha sido eliminado';
     END IF;
 
     SET @balance_emisor = (SELECT balance FROM usuarios WHERE id_usuario= emisor);
@@ -59,3 +59,5 @@ DELIMITER **
     SELECT LAST_INSERT_ID();
     END **
 DELIMITER ;
+
+-- SHOW PROCEDURE STATUS WHERE DB = 'bancosolar';
