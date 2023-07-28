@@ -1,0 +1,61 @@
+CREATE DATABASE bancosolar;
+
+USE bancosolar;
+
+CREATE TABLE usuarios(
+  id_usuario SERIAL PRIMARY KEY,
+  nombre VARCHAR(60) NOT NULL,
+  balance DECIMAL NOT NULL CHECK (balance >= 0),
+  state INT NOT NULL DEFAULT 1
+);
+
+CREATE TABLE transferencias(
+  id_transferencia SERIAL PRIMARY KEY,
+  emisor BIGINT UNSIGNED NOT NULL,
+  receptor BIGINT UNSIGNED NOT NULL,
+  monto DECIMAL NOT NULL,
+  fecha TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (emisor) REFERENCES usuarios(id_usuario),
+  FOREIGN KEY (receptor) REFERENCES usuarios(id_usuario)
+);
+
+DELIMITER **
+    CREATE PROCEDURE transferir(
+        IN emisor BIGINT UNSIGNED,
+        IN receptor BIGINT UNSIGNED,
+        IN monto DECIMAL
+    )
+    
+    BEGIN
+    
+    IF (emisor = receptor) THEN
+      SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El emisor no puede ser igual al receptor';
+    END IF;
+    
+    SET @emisor_state = (SELECT state FROM usuarios WHERE id_usuario= emisor);
+    SET @receptor_state = (SELECT state FROM usuarios WHERE id_usuario= receptor);
+
+    -- chequea si usuario no existe, No funciona.
+    /* IF (@emisor_state = null OR @receptor_state = null) THEN
+      SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Al menos uno de los usuarios no existe';
+    END IF; */
+
+    -- chequea si usuario no existe o no existe por borrado logico
+    -- PROBLEMA: no funciona esta comprobacion cuando paso un emisor que no existe, en todos los demas casos si funciona. why?????????????????????????????????????????
+    IF (@emisor_state != 1 OR @receptor_state != 1) THEN
+      SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Al menos uno de los usuarios no existe';
+    END IF;
+
+    SET @balance_emisor = (SELECT balance FROM usuarios WHERE id_usuario= emisor);
+    SET @balance_receptor = (SELECT balance FROM usuarios WHERE id_usuario= receptor);
+    SET @nuevo_balance_emisor = @balance_emisor - monto;
+    SET @nuevo_balance_receptor = @balance_receptor + monto;
+
+    UPDATE usuarios SET balance = @nuevo_balance_emisor WHERE id_usuario = emisor;
+    UPDATE usuarios SET balance = @nuevo_balance_receptor WHERE id_usuario = receptor;
+
+    INSERT INTO transferencias (emisor, receptor, monto) VALUES (emisor, receptor, monto);
+    
+    SELECT LAST_INSERT_ID();
+    END **
+DELIMITER ;
