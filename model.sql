@@ -14,7 +14,11 @@ CREATE TABLE transferencias(
   emisor BIGINT UNSIGNED NOT NULL,
   receptor BIGINT UNSIGNED NOT NULL,
   monto DECIMAL NOT NULL,
+  -- PROBLEMA: mysql2 devuelve un timestamp distinto al almacenado 
+  -- SOLUCION: timezone: 'Z' (ver db.js)
   fecha TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  -- la siguiente solucion ya no es necesaria pero queda documentada
+  -- fecha_unixTimestamp INT UNSIGNED NOT NULL DEFAULT (UNIX_TIMESTAMP()), 
   FOREIGN KEY (emisor) REFERENCES usuarios(id_usuario),
   FOREIGN KEY (receptor) REFERENCES usuarios(id_usuario)
 );

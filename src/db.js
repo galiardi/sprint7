@@ -7,6 +7,7 @@ const pool = createPool({
   host: DB_HOST,
   port: DB_PORT,
   database: DB_DATABASE,
+  timezone: 'Z', // mysql2 devuelve timestamp en UTC
 });
 
 const db = pool.promise();

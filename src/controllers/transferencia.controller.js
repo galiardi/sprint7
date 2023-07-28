@@ -54,6 +54,7 @@ async function obtenerTodasTransferencias(req, res) {
     return res.statuts(500).send(response);
   }
 
+  console.log(result);
   response.data = result;
   return res.status(200).send(response);
 }

@@ -264,6 +264,7 @@
     const { data } = await axios.get('http://localhost:3000/transferencias');
     $('.transferencias').html('');
     data.data.forEach((t) => {
+      console.log(t);
       $('.transferencias').append(`
        <tr>
          <td> ${formatDate(t.fecha)} </td>
@@ -279,6 +280,7 @@
   getTransferencias();
 
   const formatDate = (date) => {
+    console.log(date);
     const dateFormat = moment(date).format('L');
     const timeFormat = moment(date).format('LTS');
     return `${dateFormat} ${timeFormat}`;
